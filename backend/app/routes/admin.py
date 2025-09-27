@@ -1,5 +1,8 @@
 from flask import Blueprint, request, jsonify
 from app.utils.database import get_db_connection
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 bp = Blueprint('admin', __name__)
 
@@ -7,127 +10,168 @@ bp = Blueprint('admin', __name__)
 def login():
     data = request.get_json()
     name = data.get('name')
-    
+    logging.debug(f"Login attempt for admin: {name}")
+
     conn = get_db_connection()
     if not conn:
         return jsonify({'error': 'Database connection failed'}), 500
-    
+
     cursor = conn.cursor()
     cursor.execute("SELECT id FROM admins WHERE name = %s", (name,))
     admin = cursor.fetchone()
     conn.close()
-    
-    if admin:
-        return jsonify({'id': admin['id'], 'user_type': 'admin'}), 200
-    return jsonify({'error': 'Admin not found'}), 404
 
-@bp.route('/companies', methods=['GET'])
-def list_companies():
+    if not admin:
+        logging.debug("Admin not found")
+        return jsonify({'error': 'Admin not found'}), 404
+
+    logging.debug(f"Admin found: {admin['id']}")
+    return jsonify({'id': admin['id'], 'user_type': 'admin'}), 200
+
+@bp.route('/companies/pending', methods=['GET'])
+def get_pending_companies():
     conn = get_db_connection()
     if not conn:
         return jsonify({'error': 'Database connection failed'}), 500
-    
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, name, status FROM companies")
-    companies = cursor.fetchall()
-    conn.close()
-    
-    return jsonify([
-        {'id': row['id'], 'name': row['name'], 'status': row['status']}
-        for row in companies
-    ]), 200
 
-@bp.route('/internships', methods=['GET'])
-def list_internships():
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({'error': 'Database connection failed'}), 500
-    
-    cursor = conn.cursor()
-    cursor.execute(
-        """
-        SELECT id, company_id, role, sector, description, 
-               locations, must_required_skills, appreciated_certifications, 
-               plugin, registration_end, status 
-        FROM internships
-        """
-    )
-    internships = cursor.fetchall()
-    conn.close()
-    
-    return jsonify([
-        {
-            'id': row['id'],
-            'company_id': row['company_id'],
-            'role': row['role'],
-            'sector': row['sector'],
-            'description': row['description'],
-            'locations': row['locations'] if row['locations'] else [],
-            'must_required_skills': row['must_required_skills'] if row['must_required_skills'] else [],
-            'appreciated_certifications': row['appreciated_certifications'] if row['appreciated_certifications'] else [],
-            'plugin': row['plugin'] if row['plugin'] else {},
-            'registration_end': row['registration_end'].isoformat() if row['registration_end'] else None,
-            'status': row['status']
-        }
-        for row in internships
-    ]), 200
-
-@bp.route('/approve-company', methods=['POST'])
-def approve_company():
-    data = request.get_json()
-    company_id = data.get('company_id')
-    status = data.get('status')
-    
-    if not company_id or status not in ['approved', 'rejected']:
-        return jsonify({'error': 'Invalid company_id or status'}), 400
-    
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({'error': 'Database connection failed'}), 500
-    
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "UPDATE companies SET status = %s WHERE id = %s",
-            (status, company_id)
+            """
+            SELECT id, name, legal_entity, address, phone, email, sector, industry
+            FROM companies WHERE status = 'pending'
+            """
         )
-        if cursor.rowcount == 0:
+        companies = cursor.fetchall()
+        conn.close()
+        return jsonify([
+            {
+                'id': row['id'],
+                'name': row['name'],
+                'legal_entity': row['legal_entity'],
+                'address': row['address'],
+                'phone': row['phone'],
+                'email': row['email'],
+                'sector': row['sector'],
+                'industry': row['industry']
+            } for row in companies
+        ]), 200
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': str(e)}), 500
+
+@bp.route('/companies/approved', methods=['GET'])
+def get_approved_companies():
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({'error': 'Database connection failed'}), 500
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            SELECT 
+                c.id, c.name, 
+                COUNT(i.id) as total_internships,
+                COALESCE(SUM(i.intake), 0) as total_intake
+            FROM companies c
+            LEFT JOIN internships i ON c.id = i.company_id
+            WHERE c.status = 'approved'
+            GROUP BY c.id, c.name
+            """
+        )
+        companies = cursor.fetchall()
+        conn.close()
+        return jsonify([
+            {
+                'id': row['id'],
+                'name': row['name'],
+                'total_internships': row['total_internships'],
+                'total_intake': row['total_intake']
+            } for row in companies
+        ]), 200
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': str(e)}), 500
+
+@bp.route('/company/approve/<company_id>', methods=['POST'])
+def approve_company(company_id):
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({'error': 'Database connection failed'}), 500
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "UPDATE companies SET status = 'approved' WHERE id = %s RETURNING id",
+            (company_id,)
+        )
+        company = cursor.fetchone()
+        if not company:
             conn.close()
             return jsonify({'error': 'Company not found'}), 404
         conn.commit()
-        return jsonify({'message': f'Company {status}'}), 200
+        conn.close()
+        return jsonify({'message': 'Company approved'}), 200
     except Exception as e:
         conn.rollback()
-        return jsonify({'error': str(e)}), 400
-    finally:
         conn.close()
+        return jsonify({'error': str(e)}), 500
 
-@bp.route('/approve-internship', methods=['POST'])
-def approve_internship():
-    data = request.get_json()
-    internship_id = data.get('internship_id')
-    status = data.get('status')
-    
-    if not internship_id or status not in ['approved', 'rejected']:
-        return jsonify({'error': 'Invalid internship_id or status'}), 400
-    
+@bp.route('/company/deny/<company_id>', methods=['POST'])
+def deny_company(company_id):
     conn = get_db_connection()
     if not conn:
         return jsonify({'error': 'Database connection failed'}), 500
-    
+
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "UPDATE internships SET status = %s WHERE id = %s",
-            (status, internship_id)
+            "UPDATE companies SET status = 'denied' WHERE id = %s RETURNING id",
+            (company_id,)
         )
-        if cursor.rowcount == 0:
+        company = cursor.fetchone()
+        if not company:
             conn.close()
-            return jsonify({'error': 'Internship not found'}), 404
+            return jsonify({'error': 'Company not found'}), 404
         conn.commit()
-        return jsonify({'message': f'Internship {status}'}), 200
+        conn.close()
+        return jsonify({'message': 'Company denied'}), 200
     except Exception as e:
         conn.rollback()
-        return jsonify({'error': str(e)}), 400
-    finally:
         conn.close()
+        return jsonify({'error': str(e)}), 500
+
+@bp.route('/companies/history', methods=['GET'])
+def get_company_history():
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({'error': 'Database connection failed'}), 500
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            SELECT 
+                c.id, c.name, c.status, 
+                COUNT(i.id) as total_internships,
+                COALESCE(SUM(i.intake), 0) as total_intake
+            FROM companies c
+            LEFT JOIN internships i ON c.id = i.company_id
+            GROUP BY c.id, c.name, c.status
+            """
+        )
+        companies = cursor.fetchall()
+        conn.close()
+        return jsonify([
+            {
+                'id': row['id'],
+                'name': row['name'],
+                'status': row['status'],
+                'total_internships': row['total_internships'],
+                'total_intake': row['total_intake']
+            } for row in companies
+        ]), 200
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': str(e)}), 500

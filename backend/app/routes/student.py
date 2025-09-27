@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from app.utils.database import get_db_connection
-from app.services.scoring_engine import calculate_score
+from app.services.scoring_engine import calculate_affirmative_action_score
 import uuid
 import json
 import logging
@@ -17,18 +17,47 @@ def register():
     name = request.form.get('name')
     age = request.form.get('age')
     cgpa = request.form.get('cgpa')
-    institution_name = request.form.get('institution_name')
+    community_category = request.form.get('community_category')
+    gender = request.form.get('gender')
+    urban_rural = request.form.get('urban_rural')
+    family_income = request.form.get('family_income')
+    education_level = request.form.get('education_level')
     
-    if not all([name, age, cgpa, institution_name]):
+    # Validate required fields
+    if not all([name, age, cgpa, community_category, gender, urban_rural, family_income, education_level]):
         return jsonify({'error': 'Missing required fields'}), 400
     
+    # Validate data types and PMIS eligibility
     try:
         age = int(age)
         cgpa = float(cgpa)
-        if age < 16 or cgpa < 0 or cgpa > 10:
-            return jsonify({'error': 'Invalid age or CGPA'}), 400
+        family_income = float(family_income)
+        
+        # PMIS Eligibility Checks
+        if age < 21 or age > 24:
+            return jsonify({'error': 'Age must be between 21 and 24'}), 400
+        if cgpa < 0 or cgpa > 10:
+            return jsonify({'error': 'Invalid CGPA'}), 400
+        if family_income > 800000:
+            return jsonify({'error': 'Family income exceeds ₹8,00,000'}), 400
+        if education_level not in ['High School', 'Higher Secondary', 'Diploma', 'Bachelor']:
+            return jsonify({'error': 'Invalid education level'}), 400
+        if community_category not in ['SC', 'ST', 'OBC', 'General', 'Others']:
+            return jsonify({'error': 'Invalid community category'}), 400
+        if gender not in ['Male', 'Female', 'Third Gender']:
+            return jsonify({'error': 'Invalid gender'}), 400
+        if urban_rural not in ['Urban', 'Rural']:
+            return jsonify({'error': 'Invalid urban/rural status'}), 400
     except ValueError:
-        return jsonify({'error': 'Invalid age or CGPA format'}), 400
+        return jsonify({'error': 'Invalid age, CGPA, or family income format'}), 400
+    
+    # Calculate affirmative action score
+    student_data = {
+        'community_category': community_category,
+        'gender': gender,
+        'urban_rural': urban_rural
+    }
+    affirmative_action_score = calculate_affirmative_action_score(student_data)
     
     conn = get_db_connection()
     if not conn:
@@ -36,17 +65,28 @@ def register():
     
     cursor = conn.cursor()
     try:
+        # Check for duplicate name
+        cursor.execute("SELECT id FROM students WHERE name = %s", (name,))
+        if cursor.fetchone():
+            conn.close()
+            return jsonify({'error': 'Student with this name already exists'}), 400
+        
         student_id = str(uuid.uuid4())
         cursor.execute(
             """
-            INSERT INTO students (id, name, age, cgpa, institution_name)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO students (
+                id, name, age, cgpa, community_category, gender, urban_rural,
+                family_income, education_level, affirmative_action_score
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id
             """,
-            (student_id, name, age, cgpa, institution_name)
+            (
+                student_id, name, age, cgpa, community_category, gender, urban_rural,
+                family_income, education_level, affirmative_action_score
+            )
         )
         conn.commit()
-        return jsonify({'id': student_id}), 201
+        return jsonify({'id': student_id, 'affirmative_action_score': affirmative_action_score}), 201
     except Exception as e:
         conn.rollback()
         return jsonify({'error': str(e)}), 400
@@ -154,7 +194,7 @@ def apply_internship():
         conn.close()
         return jsonify({'error': 'Internship not approved'}), 403
     
-    cursor.execute("SELECT id, name, age, cgpa, institution_name FROM students WHERE id = %s", (student_id,))
+    cursor.execute("SELECT id, name, age, cgpa, community_category, gender, urban_rural, family_income, education_level, affirmative_action_score FROM students WHERE id = %s", (student_id,))
     student = cursor.fetchone()
     if not student:
         conn.close()
@@ -195,10 +235,14 @@ def apply_internship():
             'name': student['name'],
             'age': student['age'],
             'cgpa': student['cgpa'],
-            'institution_name': student['institution_name'],
+            'community_category': student['community_category'],
+            'gender': student['gender'],
+            'urban_rural': student['urban_rural'],
+            'family_income': student['family_income'],
+            'education_level': student['education_level'],
+            'affirmative_action': student['affirmative_action_score'],
             'github_url': github_url,
-            'certificates': certificates,
-            'affirmative_action': 0.0  # Mock value
+            'certificates': certificates
         }
         internship_data = {
             'role': internship_data['role'],

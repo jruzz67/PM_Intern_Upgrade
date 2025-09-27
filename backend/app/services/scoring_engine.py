@@ -1,5 +1,29 @@
 import numpy as np
 
+def calculate_affirmative_action_score(student_data):
+    community_score = {
+        'SC': 0.4,
+        'ST': 0.4,
+        'OBC': 0.3,
+        'General': 0.1,
+        'Others': 0.2
+    }.get(student_data.get('community_category', 'General'), 0.1)
+    
+    gender_score = {
+        'Female': 0.3,
+        'Third Gender': 0.3,
+        'Male': 0.1
+    }.get(student_data.get('gender', 'Male'), 0.1)
+    
+    urban_rural_score = {
+        'Rural': 0.3,
+        'Urban': 0.1
+    }.get(student_data.get('urban_rural', 'Urban'), 0.1)
+    
+    # Weighted average
+    score = (0.4 * community_score + 0.3 * gender_score + 0.3 * urban_rural_score)
+    return round(score, 2)
+
 def calculate_score(student_data, internship_data, student_vector, internship_vector):
     weights = {
         'proficiency': 0.25,
@@ -20,7 +44,7 @@ def calculate_score(student_data, internship_data, student_vector, internship_ve
     validation_score = 0.5  # Mock (GitHub/PDF working, LeetCode pending)
 
     # Affirmative Action
-    affirmative_action_score = student_data.get('affirmative_action', 0.0)
+    affirmative_action_score = calculate_affirmative_action_score(student_data)
 
     # Final Score
     final_score = (
