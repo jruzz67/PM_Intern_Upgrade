@@ -1,340 +1,282 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
+// import axios from 'axios'; // Not needed for frontend demo
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiUsers, FiBriefcase, FiCheckCircle, FiXCircle, FiLogOut, FiShield, FiFileText } from 'react-icons/fi';
+
+// --- NEW: Sample Data for Demonstration ---
+const sampleData = {
+    pendingCompanies: [
+        { id: 'comp-01', name: 'QuantumLeap Tech', legal_entity: 'Pvt Ltd', address: '123 Cyber St, Bangalore', phone: '9876543210', email: 'hr@quantum.io', sector: 'IT', industry: 'AI/ML' },
+        { id: 'comp-02', name: 'GreenScape Solutions', legal_entity: 'LLP', address: '456 Eco Park, Pune', phone: '9876543211', email: 'contact@greenscape.com', sector: 'Environmental', industry: 'Sustainability' },
+    ],
+    approvedCompanies: [
+        { id: 'comp-03', name: 'Innovate Solutions Inc.', total_internships: 5, total_intake: 20 },
+    ],
+    pendingInternships: [
+        { id: 'int-01', title: 'Cloud DevOps Intern', company_name: 'Innovate Solutions Inc.', sector: 'IT', area: 'Cloud Computing', work_mode: 'Remote', intake: 5 },
+    ],
+    rejectedInternships: [],
+    companyHistory: [
+        { id: 'hist-01', name: 'Data Weavers', status: 'Denied', total_internships: 0, total_intake: 0 }
+    ],
+};
+
 
 const AdminDashboard = () => {
-  const [isSignedIn, setIsSignedIn] = useState(false);
-  const [loginName, setLoginName] = useState('');
-  const [pendingCompanies, setPendingCompanies] = useState([]);
-  const [approvedCompanies, setApprovedCompanies] = useState([]);
-  const [pendingInternships, setPendingInternships] = useState([]);
-  const [rejectedInternships, setRejectedInternships] = useState([]);
-  const [companyHistory, setCompanyHistory] = useState([]);
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user')) || {};
+    const [isSignedIn, setIsSignedIn] = useState(false);
+    const [loginName, setLoginName] = useState('');
+    const [error, setError] = useState('');
+    const [activeTab, setActiveTab] = useState('Pending Companies');
 
-  useEffect(() => {
-    if (user.user_type === 'admin') {
-      setIsSignedIn(true);
-      fetchData();
+    // --- State initialized with sample data ---
+    const [pendingCompanies, setPendingCompanies] = useState(sampleData.pendingCompanies);
+    const [approvedCompanies, setApprovedCompanies] = useState(sampleData.approvedCompanies);
+    const [pendingInternships, setPendingInternships] = useState(sampleData.pendingInternships);
+    const [rejectedInternships, setRejectedInternships] = useState(sampleData.rejectedInternships);
+    const [companyHistory, setCompanyHistory] = useState(sampleData.companyHistory);
+
+    const navigate = useNavigate();
+
+    // --- OLD: useEffect and fetchData are commented out ---
+    /*
+    const user = JSON.parse(localStorage.getItem('user')) || {};
+    useEffect(() => {
+        if (user.user_type === 'admin') {
+            setIsSignedIn(true);
+            fetchData();
+        }
+    }, []);
+    const fetchData = async () => { ... };
+    */
+
+    // --- UPDATED: Frontend-only functions ---
+
+    const handleSignIn = (e) => {
+        e.preventDefault();
+        if (loginName) {
+            setIsSignedIn(true);
+            setError('');
+        } else {
+            setError('Please enter a name.');
+        }
+    };
+
+    const handleLogout = () => {
+        setIsSignedIn(false);
+        setLoginName('');
+        // Reset to initial sample data on logout for a clean demo
+        setPendingCompanies(sampleData.pendingCompanies);
+        setApprovedCompanies(sampleData.approvedCompanies);
+        setPendingInternships(sampleData.pendingInternships);
+        // navigate('/admin');
+    };
+    
+    const handleApproveCompany = (companyId) => {
+        const companyToApprove = pendingCompanies.find(c => c.id === companyId);
+        if (!companyToApprove) return;
+
+        setPendingCompanies(pendingCompanies.filter(c => c.id !== companyId));
+        setApprovedCompanies([...approvedCompanies, { ...companyToApprove, total_internships: 0, total_intake: 0 }]);
+    };
+
+    const handleDenyCompany = (companyId) => {
+        setPendingCompanies(pendingCompanies.filter(c => c.id !== companyId));
+        // Optionally add to a 'denied' history list here
+    };
+
+    const handleApproveInternship = (internshipId) => {
+        setPendingInternships(pendingInternships.filter(i => i.id !== internshipId));
+        // Optionally move to an 'approved' internships list
+    };
+
+    const handleDenyInternship = (internshipId) => {
+        const internshipToDeny = pendingInternships.find(i => i.id === internshipId);
+        if(!internshipToDeny) return;
+
+        setPendingInternships(pendingInternships.filter(i => i.id !== internshipId));
+        setRejectedInternships([...rejectedInternships, internshipToDeny]);
+    };
+
+
+    if (!isSignedIn) {
+        return (
+            <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+                <motion.div 
+                    initial={{ opacity: 0, y: -20 }} 
+                    animate={{ opacity: 1, y: 0 }}
+                    className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl"
+                >
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2 text-center">Admin Portal</h1>
+                    <p className="text-gray-500 mb-6 text-center">Sign in to manage the platform.</p>
+                    {error && <p className="text-red-500 mb-4 text-center text-sm">{error}</p>}
+                    <form onSubmit={handleSignIn} className="space-y-4">
+                        <input
+                            type="text"
+                            placeholder="Admin Name"
+                            value={loginName}
+                            onChange={(e) => setLoginName(e.target.value)}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                            required
+                        />
+                        <button type="submit" className="w-full p-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition-colors">
+                            Sign In
+                        </button>
+                    </form>
+                </motion.div>
+            </div>
+        );
     }
-  }, []);
 
-  const fetchData = async () => {
-    try {
-      const [pendingResponse, approvedResponse, internshipsResponse, historyResponse] = await Promise.all([
-        axios.get('http://127.0.0.1:5000/api/admin/companies/pending'),
-        axios.get('http://127.0.0.1:5000/api/admin/companies/approved'),
-        axios.get('http://127.0.0.1:5000/api/internship/all?user_type=admin'),
-        axios.get('http://127.0.0.1:5000/api/admin/companies/history'),
-      ]);
-      setPendingCompanies(pendingResponse.data);
-      setApprovedCompanies(approvedResponse.data);
-      setPendingInternships(internshipsResponse.data.filter(i => i.status === 'pending'));
-      setRejectedInternships(internshipsResponse.data.filter(i => i.status === 'rejected'));
-      setCompanyHistory(historyResponse.data);
-      setError('');
-    } catch (err) {
-      setError(err.response?.data?.error || `Failed to fetch data: ${err.message}`);
-    }
-  };
-
-  const handleSignIn = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await axios.post('http://127.0.0.1:5000/api/admin/login', { name: loginName });
-      localStorage.setItem('user', JSON.stringify({ id: response.data.id, user_type: 'admin', name: loginName }));
-      setIsSignedIn(true);
-      setError('');
-      fetchData();
-    } catch (err) {
-      setError(err.response?.data?.error || `Login failed: ${err.message}`);
-    }
-  };
-
-  const handleApproveCompany = async (companyId) => {
-    try {
-      await axios.post(`http://127.0.0.1:5000/api/admin/company/approve/${companyId}`, {}, {
-        headers: { 'Admin-ID': user.id }
-      });
-      setPendingCompanies(pendingCompanies.filter(company => company.id !== companyId));
-      const approvedResponse = await axios.get('http://127.0.0.1:5000/api/admin/companies/approved');
-      setApprovedCompanies(approvedResponse.data);
-      const historyResponse = await axios.get('http://127.0.0.1:5000/api/admin/companies/history');
-      setCompanyHistory(historyResponse.data);
-      setError('Company approved');
-    } catch (err) {
-      setError(err.response?.data?.error || `Failed to approve company: ${err.response?.status} - ${err.message}`);
-    }
-  };
-
-  const handleDenyCompany = async (companyId) => {
-    try {
-      await axios.post(`http://127.0.0.1:5000/api/admin/company/deny/${companyId}`, {}, {
-        headers: { 'Admin-ID': user.id }
-      });
-      setPendingCompanies(pendingCompanies.filter(company => company.id !== companyId));
-      const historyResponse = await axios.get('http://127.0.0.1:5000/api/admin/companies/history');
-      setCompanyHistory(historyResponse.data);
-      setError('Company denied');
-    } catch (err) {
-      setError(err.response?.data?.error || `Failed to deny company: ${err.response?.status} - ${err.message}`);
-    }
-  };
-
-  const handleApproveInternship = async (internshipId) => {
-    try {
-      const response = await axios.post(`http://127.0.0.1:5000/api/internship/admin/internship/approve/${internshipId}`, {}, {
-        headers: { 'Admin-ID': user.id }
-      });
-      setPendingInternships(pendingInternships.filter(internship => internship.id !== internshipId));
-      setError(response.data.message || 'Internship approved');
-    } catch (err) {
-      setError(err.response?.data?.error || `Failed to approve internship: ${err.response?.status} - ${err.message}`);
-    }
-  };
-
-  const handleDenyInternship = async (internshipId) => {
-    try {
-      const response = await axios.post(`http://127.0.0.1:5000/api/internship/admin/internship/deny/${internshipId}`, {}, {
-        headers: { 'Admin-ID': user.id }
-      });
-      setPendingInternships(pendingInternships.filter(internship => internship.id !== internshipId));
-      setRejectedInternships([...rejectedInternships, ...(await axios.get('http://127.0.0.1:5000/api/internship/all?user_type=admin')).data.filter(i => i.id === internshipId)]);
-      setError(response.data.message || 'Internship rejected');
-    } catch (err) {
-      setError(err.response?.data?.error || `Failed to deny internship: ${err.response?.status} - ${err.message}`);
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    setIsSignedIn(false);
-    setLoginName('');
-    setPendingCompanies([]);
-    setApprovedCompanies([]);
-    setPendingInternships([]);
-    setRejectedInternships([]);
-    setCompanyHistory([]);
-    setError('');
-    navigate('/admin');
-  };
-
-  if (!isSignedIn) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-        <h1 className="text-2xl font-bold mb-4">Admin Signin</h1>
-        {error && <p className="text-red-500 mb-4">{error}</p>}
-        <form onSubmit={handleSignIn} className="w-full max-w-md bg-white p-6 rounded shadow">
-          <input
-            type="text"
-            placeholder="Admin Name"
-            value={loginName}
-            onChange={(e) => setLoginName(e.target.value)}
-            className="w-full p-2 mb-4 border rounded"
-            required
-          />
-          <button type="submit" className="w-full p-2 bg-blue-500 text-white rounded">Sign In</button>
-        </form>
-      </div>
+        <div className="flex h-screen bg-gray-100 font-sans">
+            <aside className="w-72 bg-gray-900 text-white flex flex-col">
+                <div className="p-6 text-2xl font-bold border-b border-gray-700 flex items-center gap-3"><FiShield /> Admin Portal</div>
+                <nav className="flex-1 px-4 py-6 space-y-2">
+                    {['Pending Companies', 'Pending Internships', 'Approved Companies', 'Rejected Internships'].map(tab => (
+                         <button key={tab} onClick={() => setActiveTab(tab)} className={`w-full flex items-center px-4 py-2.5 rounded-md text-left transition-colors ${activeTab === tab ? 'bg-orange-500' : 'hover:bg-gray-700'}`}>
+                            {tab.includes('Companies') && <FiUsers className="mr-3" />}
+                            {tab.includes('Internships') && <FiBriefcase className="mr-3" />}
+                            {tab}
+                        </button>
+                    ))}
+                </nav>
+                <div className="p-4 border-t border-gray-700">
+                    <button onClick={handleLogout} className="w-full flex items-center px-4 py-2 rounded-md hover:bg-gray-700 transition-colors">
+                        <FiLogOut className="mr-3" /> Logout
+                    </button>
+                </div>
+            </aside>
+
+            <main className="flex-1 flex flex-col overflow-hidden">
+                <header className="flex justify-between items-center p-6 bg-white border-b">
+                    <h1 className="text-2xl font-bold text-gray-800">{activeTab}</h1>
+                </header>
+
+                <div className="flex-1 p-6 overflow-y-auto">
+                    <AnimatePresence mode="wait">
+                        <motion.div 
+                            key={activeTab} 
+                            initial={{ opacity: 0, y: 20 }} 
+                            animate={{ opacity: 1, y: 0 }} 
+                            exit={{ opacity: 0, y: -20 }}
+                        >
+                           {/* Render content based on active tab */}
+                            {activeTab === 'Pending Companies' && (
+                                <DataTable
+                                    headers={['Name', 'Email', 'Phone', 'Sector', 'Actions']}
+                                    data={pendingCompanies}
+                                    renderRow={(company) => (
+                                        <>
+                                            <td className="p-3 font-medium text-gray-800">{company.name}</td>
+                                            <td className="p-3">{company.email}</td>
+                                            <td className="p-3">{company.phone}</td>
+                                            <td className="p-3">{company.sector}</td>
+                                            <td className="p-3 space-x-2">
+                                                <ActionButton icon={<FiCheckCircle />} onClick={() => handleApproveCompany(company.id)} variant="approve" />
+                                                <ActionButton icon={<FiXCircle />} onClick={() => handleDenyCompany(company.id)} variant="deny" />
+                                            </td>
+                                        </>
+                                    )}
+                                    emptyMessage="No pending companies for approval."
+                                />
+                            )}
+                             {activeTab === 'Pending Internships' && (
+                                <DataTable
+                                    headers={['Title', 'Company', 'Work Mode', 'Intake', 'Actions']}
+                                    data={pendingInternships}
+                                    renderRow={(internship) => (
+                                        <>
+                                            <td className="p-3 font-medium text-gray-800">{internship.title}</td>
+                                            <td className="p-3">{internship.company_name}</td>
+                                            <td className="p-3">{internship.work_mode}</td>
+                                            <td className="p-3">{internship.intake}</td>
+                                            <td className="p-3 space-x-2">
+                                                <ActionButton icon={<FiCheckCircle />} onClick={() => handleApproveInternship(internship.id)} variant="approve" />
+                                                <ActionButton icon={<FiXCircle />} onClick={() => handleDenyInternship(internship.id)} variant="deny" />
+                                            </td>
+                                        </>
+                                    )}
+                                    emptyMessage="No pending internships for approval."
+                                />
+                            )}
+                             {activeTab === 'Approved Companies' && (
+                                <DataTable
+                                    headers={['Name', 'Total Internships', 'Total Intake']}
+                                    data={approvedCompanies}
+                                    renderRow={(company) => (
+                                        <>
+                                            <td className="p-3 font-medium text-gray-800">{company.name}</td>
+                                            <td className="p-3">{company.total_internships}</td>
+                                            <td className="p-3">{company.total_intake}</td>
+                                        </>
+                                    )}
+                                    emptyMessage="No companies have been approved yet."
+                                />
+                            )}
+                             {activeTab === 'Rejected Internships' && (
+                                <DataTable
+                                    headers={['Title', 'Company', 'Sector']}
+                                    data={rejectedInternships}
+                                    renderRow={(internship) => (
+                                        <>
+                                            <td className="p-3 font-medium text-gray-800">{internship.title}</td>
+                                            <td className="p-3">{internship.company_name}</td>
+                                            <td className="p-3">{internship.sector}</td>
+                                        </>
+                                    )}
+                                    emptyMessage="No internships have been rejected."
+                                />
+                            )}
+                        </motion.div>
+                    </AnimatePresence>
+                </div>
+            </main>
+        </div>
     );
-  }
-
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-      <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
-      <button
-        onClick={handleLogout}
-        className="mb-4 p-2 bg-red-500 text-white rounded"
-      >
-        Logout
-      </button>
-      {error && <p className={error.includes('approved') || error.includes('rejected') ? 'text-green-500 mb-4' : 'text-red-500 mb-4'}>{error}</p>}
-
-      <h2 className="text-xl font-semibold mb-2">Pending Companies</h2>
-      <div className="w-full max-w-4xl mb-8">
-        {pendingCompanies.length === 0 ? (
-          <p>No pending companies</p>
-        ) : (
-          <table className="w-full border-collapse border">
-            <thead>
-              <tr className="bg-gray-200">
-                <th className="border p-2">Name</th>
-                <th className="border p-2">Legal Entity</th>
-                <th className="border p-2">Address</th>
-                <th className="border p-2">Phone</th>
-                <th className="border p-2">Email</th>
-                <th className="border p-2">Sector</th>
-                <th className="border p-2">Industry</th>
-                <th className="border p-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pendingCompanies.map(company => (
-                <tr key={company.id}>
-                  <td className="border p-2">{company.name}</td>
-                  <td className="border p-2">{company.legal_entity}</td>
-                  <td className="border p-2">{company.address}</td>
-                  <td className="border p-2">{company.phone}</td>
-                  <td className="border p-2">{company.email}</td>
-                  <td className="border p-2">{company.sector}</td>
-                  <td className="border p-2">{company.industry}</td>
-                  <td className="border p-2">
-                    <button
-                      onClick={() => handleApproveCompany(company.id)}
-                      className="mr-2 p-1 bg-green-500 text-white rounded"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => handleDenyCompany(company.id)}
-                      className="p-1 bg-red-500 text-white rounded"
-                    >
-                      Deny
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      <h2 className="text-xl font-semibold mb-2">Approved Companies</h2>
-      <div className="w-full max-w-4xl mb-8">
-        {approvedCompanies.length === 0 ? (
-          <p>No approved companies</p>
-        ) : (
-          <table className="w-full border-collapse border">
-            <thead>
-              <tr className="bg-gray-200">
-                <th className="border p-2">Name</th>
-                <th className="border p-2">Total Internships Posted</th>
-                <th className="border p-2">Total Intake</th>
-              </tr>
-            </thead>
-            <tbody>
-              {approvedCompanies.map(company => (
-                <tr key={company.id}>
-                  <td className="border p-2">{company.name}</td>
-                  <td className="border p-2">{company.total_internships}</td>
-                  <td className="border p-2">{company.total_intake}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      <h2 className="text-xl font-semibold mb-2">Pending Internships</h2>
-      <div className="w-full max-w-4xl mb-8">
-        {pendingInternships.length === 0 ? (
-          <p>No pending internships</p>
-        ) : (
-          <table className="w-full border-collapse border">
-            <thead>
-              <tr className="bg-gray-200">
-                <th className="border p-2">Title</th>
-                <th className="border p-2">Company</th>
-                <th className="border p-2">Sector</th>
-                <th className="border p-2">Area</th>
-                <th className="border p-2">Work Mode</th>
-                <th className="border p-2">Intake</th>
-                <th className="border p-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pendingInternships.map(internship => (
-                <tr key={internship.id}>
-                  <td className="border p-2">{internship.title}</td>
-                  <td className="border p-2">{internship.company_name}</td>
-                  <td className="border p-2">{internship.sector}</td>
-                  <td className="border p-2">{internship.area}</td>
-                  <td className="border p-2">{internship.work_mode}</td>
-                  <td className="border p-2">{internship.intake}</td>
-                  <td className="border p-2">
-                    <button
-                      onClick={() => handleApproveInternship(internship.id)}
-                      className="mr-2 p-1 bg-green-500 text-white rounded"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => handleDenyInternship(internship.id)}
-                      className="p-1 bg-red-500 text-white rounded"
-                    >
-                      Deny
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      <h2 className="text-xl font-semibold mb-2">Rejected Internships</h2>
-      <div className="w-full max-w-4xl mb-8">
-        {rejectedInternships.length === 0 ? (
-          <p>No rejected internships</p>
-        ) : (
-          <table className="w-full border-collapse border">
-            <thead>
-              <tr className="bg-gray-200">
-                <th className="border p-2">Title</th>
-                <th className="border p-2">Company</th>
-                <th className="border p-2">Sector</th>
-                <th className="border p-2">Area</th>
-                <th className="border p-2">Work Mode</th>
-                <th className="border p-2">Intake</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rejectedInternships.map(internship => (
-                <tr key={internship.id}>
-                  <td className="border p-2">{internship.title}</td>
-                  <td className="border p-2">{internship.company_name}</td>
-                  <td className="border p-2">{internship.sector}</td>
-                  <td className="border p-2">{internship.area}</td>
-                  <td className="border p-2">{internship.work_mode}</td>
-                  <td className="border p-2">{internship.intake}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      <h2 className="text-xl font-semibold mb-2">Company History</h2>
-      <div className="w-full max-w-4xl">
-        {companyHistory.length === 0 ? (
-          <p>No company history</p>
-        ) : (
-          <table className="w-full border-collapse border">
-            <thead>
-              <tr className="bg-gray-200">
-                <th className="border p-2">Name</th>
-                <th className="border p-2">Status</th>
-                <th className="border p-2">Total Internships</th>
-                <th className="border p-2">Total Intake</th>
-              </tr>
-            </thead>
-            <tbody>
-              {companyHistory.map(company => (
-                <tr key={company.id}>
-                  <td className="border p-2">{company.name}</td>
-                  <td className="border p-2">{company.status}</td>
-                  <td className="border p-2">{company.total_internships}</td>
-                  <td className="border p-2">{company.total_intake}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </div>
-  );
 };
+
+// Helper component for rendering tables consistently
+const DataTable = ({ headers, data, renderRow, emptyMessage }) => {
+    if (data.length === 0) {
+        return (
+            <div className="text-center text-gray-500 mt-12 p-8 bg-white rounded-lg shadow">
+                <FiFileText className="mx-auto h-12 w-12 text-gray-300" />
+                <h3 className="mt-4 text-lg font-medium">{emptyMessage}</h3>
+            </div>
+        );
+    }
+    return (
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+            <table className="w-full text-sm text-left text-gray-600">
+                <thead className="bg-gray-50 text-xs text-gray-700 uppercase">
+                    <tr>
+                        {headers.map(header => <th key={header} className="p-3 font-semibold">{header}</th>)}
+                    </tr>
+                </thead>
+                <tbody>
+                    {data.map((item) => (
+                        <tr key={item.id} className="border-b hover:bg-gray-50">
+                            {renderRow(item)}
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+};
+
+// Helper component for action buttons
+const ActionButton = ({ icon, onClick, variant }) => {
+    const styles = {
+        approve: 'bg-green-100 text-green-700 hover:bg-green-200',
+        deny: 'bg-red-100 text-red-700 hover:bg-red-200'
+    }
+    return (
+        <button onClick={onClick} className={`p-2 rounded-md transition-colors ${styles[variant]}`}>
+            {icon}
+        </button>
+    );
+}
 
 export default AdminDashboard;

@@ -1,0 +1,273 @@
+// This file contains sample data for demonstration purposes.
+
+export const sampleInternships = [
+    // --- IT & Software Development ---
+    {
+        id: 1,
+        title: 'Frontend Developer Intern (React)',
+        company_name: 'Innovate Solutions Inc.',
+        location: 'Bengaluru, Karnataka',
+        work_mode: 'Hybrid',
+        deadline: '2025-10-31T23:59:59Z',
+        start_date: '2025-11-15T09:00:00Z',
+        description: 'Join our dynamic team to build and maintain responsive user interfaces using React, contributing to our flagship products.',
+        must_have_skills: ['HTML', 'CSS', 'JavaScript', 'React', 'Git'],
+        good_to_have_skills: ['TypeScript', 'Redux', 'Next.js'],
+        status: 'approved'
+    },
+    {
+        id: 2,
+        title: 'Backend Developer Intern (Node.js)',
+        company_name: 'Tech Systems Co.',
+        location: 'Pune, Maharashtra',
+        work_mode: 'Remote',
+        deadline: '2025-11-05T23:59:59Z',
+        start_date: '2025-11-20T09:00:00Z',
+        description: 'Work on the server-side logic of our applications, developing APIs and managing databases with Node.js and MongoDB.',
+        must_have_skills: ['Node.js', 'Express', 'MongoDB', 'REST APIs'],
+        good_to_have_skills: ['Docker', 'AWS', 'GraphQL'],
+        status: 'approved'
+    },
+    {
+        id: 3,
+        title: 'Data Science Intern',
+        company_name: 'Data Insights Ltd.',
+        location: 'Hyderabad, Telangana',
+        work_mode: 'On-site',
+        deadline: '2025-10-25T23:59:59Z',
+        start_date: '2025-11-10T09:00:00Z',
+        description: 'Analyze large datasets to extract meaningful insights, build predictive models, and contribute to our data-driven strategies.',
+        must_have_skills: ['Python', 'Pandas', 'NumPy', 'SQL'],
+        good_to_have_skills: ['Scikit-learn', 'TensorFlow', 'Tableau'],
+        status: 'approved'
+    },
+    {
+        id: 4,
+        title: 'Cloud Engineering Intern (Azure)',
+        company_name: 'InfraCloud Services',
+        location: 'Chennai, Tamil Nadu',
+        work_mode: 'Hybrid',
+        deadline: '2025-11-12T23:59:59Z',
+        start_date: '2025-12-01T09:00:00Z',
+        description: 'Help manage and scale our cloud infrastructure on Azure. You will work with virtual machines, networking, and CI/CD pipelines.',
+        must_have_skills: ['Azure', 'PowerShell', 'CI/CD', 'Networking Basics'],
+        good_to_have_skills: ['Terraform', 'Kubernetes'],
+        status: 'approved'
+    },
+    {
+        id: 5,
+        title: 'Mobile App Developer Intern (Flutter)',
+        company_name: 'AppWorks Mobile',
+        location: 'Remote',
+        work_mode: 'Remote',
+        deadline: '2025-11-20T23:59:59Z',
+        start_date: '2025-12-05T09:00:00Z',
+        description: 'Develop cross-platform mobile applications using Flutter. You will be involved in the full development lifecycle from design to deployment.',
+        must_have_skills: ['Flutter', 'Dart', 'Firebase', 'UI/UX Principles'],
+        good_to_have_skills: ['Native Android (Kotlin)', 'Native iOS (Swift)'],
+        status: 'approved'
+    },
+
+    // --- Design & Marketing ---
+    {
+        id: 6,
+        title: 'UI/UX Design Intern',
+        company_name: 'Creative Minds Studio',
+        location: 'Mumbai, Maharashtra',
+        work_mode: 'Hybrid',
+        deadline: '2025-12-01T23:59:59Z',
+        start_date: '2026-01-05T09:00:00Z',
+        description: 'Create intuitive and visually appealing user interfaces. Work with product teams to design wireframes, mockups, and prototypes.',
+        must_have_skills: ['Figma', 'Sketch', 'Wireframing', 'Prototyping'],
+        good_to_have_skills: ['Adobe XD', 'User Research'],
+        status: 'approved'
+    },
+    {
+        id: 7,
+        title: 'Digital Marketing Intern',
+        company_name: 'Growth Hackers Agency',
+        location: 'Noida, Uttar Pradesh',
+        work_mode: 'On-site',
+        deadline: '2025-10-28T23:59:59Z',
+        start_date: '2025-11-15T09:00:00Z',
+        description: 'Assist in creating and managing digital marketing campaigns across various channels, including social media, SEO, and email.',
+        must_have_skills: ['SEO/SEM', 'Social Media Marketing', 'Content Creation'],
+        good_to_have_skills: ['Google Analytics', 'Canva'],
+        status: 'approved'
+    },
+    {
+        id: 8,
+        title: 'Content Writer Intern',
+        company_name: 'Wordsmith Creations',
+        location: 'Remote',
+        work_mode: 'Remote',
+        deadline: '2025-11-10T23:59:59Z',
+        start_date: '2025-11-25T09:00:00Z',
+        description: 'Write engaging and SEO-friendly content for blogs, websites, and social media platforms for our diverse clients.',
+        must_have_skills: ['Creative Writing', 'English Proficiency', 'SEO Writing', 'Research'],
+        good_to_have_skills: ['Grammarly', 'WordPress'],
+        status: 'approved'
+    },
+    {
+        id: 9,
+        title: 'Graphic Design Intern',
+        company_name: 'Pixel Perfect Designs',
+        location: 'Jaipur, Rajasthan',
+        work_mode: 'Hybrid',
+        deadline: '2025-11-18T23:59:59Z',
+        start_date: '2025-12-02T09:00:00Z',
+        description: 'Create compelling visual assets for digital and print media, including social media posts, brochures, and logos.',
+        must_have_skills: ['Adobe Photoshop', 'Adobe Illustrator', 'Canva'],
+        good_to_have_skills: ['After Effects', 'Figma'],
+        status: 'approved'
+    },
+
+    // --- Finance & Business ---
+    {
+        id: 10,
+        title: 'Financial Analyst Intern',
+        company_name: 'Capital Investments Group',
+        location: 'Mumbai, Maharashtra',
+        work_mode: 'On-site',
+        deadline: '2025-12-05T23:59:59Z',
+        start_date: '2026-01-10T09:00:00Z',
+        description: 'Support our finance team with financial modeling, market research, and preparing investment reports.',
+        must_have_skills: ['MS Excel', 'Financial Modeling', 'Accounting Basics'],
+        good_to_have_skills: ['Power BI', 'Python for Finance'],
+        status: 'approved'
+    },
+    {
+        id: 11,
+        title: 'Business Development Intern',
+        company_name: 'NextGen Startups',
+        location: 'Bengaluru, Karnataka',
+        work_mode: 'On-site',
+        deadline: '2025-11-25T23:59:59Z',
+        start_date: '2025-12-10T09:00:00Z',
+        description: 'Identify new business opportunities, conduct market research, and assist in developing strategies to attract new clients.',
+        must_have_skills: ['Communication', 'Market Research', 'MS PowerPoint'],
+        good_to_have_skills: ['CRM Software (HubSpot)', 'Sales Negotiation'],
+        status: 'approved'
+    },
+    {
+        id: 12,
+        title: 'Human Resources (HR) Intern',
+        company_name: 'PeopleFirst HR',
+        location: 'Delhi',
+        work_mode: 'Hybrid',
+        deadline: '2025-11-30T23:59:59Z',
+        start_date: '2025-12-15T09:00:00Z',
+        description: 'Assist with the recruitment process, employee onboarding, and maintaining HR records. A great opportunity to learn the core functions of HR.',
+        must_have_skills: ['MS Office Suite', 'Communication Skills', 'Organizational Skills'],
+        good_to_have_skills: ['HR Software (HRMS)', 'Recruitment Platforms'],
+        status: 'approved'
+    },
+
+    // --- Engineering & Core Fields ---
+    {
+        id: 13,
+        title: 'Mechanical Engineering Intern',
+        company_name: 'AutoDrive Innovations',
+        location: 'Pune, Maharashtra',
+        work_mode: 'On-site',
+        deadline: '2025-11-15T23:59:59Z',
+        start_date: '2025-12-01T09:00:00Z',
+        description: 'Work on designing and testing mechanical components for the automotive industry using CAD software and simulation tools.',
+        must_have_skills: ['AutoCAD', 'SolidWorks', 'Thermodynamics'],
+        good_to_have_skills: ['Ansys', 'CATIA'],
+        status: 'approved'
+    },
+    {
+        id: 14,
+        title: 'Civil Engineering Intern',
+        company_name: 'Urban Structures Pvt. Ltd.',
+        location: 'Kolkata, West Bengal',
+        work_mode: 'On-site',
+        deadline: '2025-12-10T23:59:59Z',
+        start_date: '2026-01-02T09:00:00Z',
+        description: 'Assist in site management, structural design analysis, and project planning for our upcoming urban development projects.',
+        must_have_skills: ['AutoCAD', 'STAAD Pro', 'Site Supervision'],
+        good_to_have_skills: ['Primavera', 'Revit'],
+        status: 'approved'
+    },
+    {
+        id: 15,
+        title: 'Embedded Systems Intern',
+        company_name: 'ChipDesign Co.',
+        location: 'Bengaluru, Karnataka',
+        work_mode: 'Hybrid',
+        deadline: '2025-11-22T23:59:59Z',
+        start_date: '2025-12-08T09:00:00Z',
+        description: 'Develop and test firmware for microcontrollers and embedded devices. Work with IoT protocols and hardware interfaces.',
+        must_have_skills: ['C/C++', 'Microcontrollers (Arduino/Raspberry Pi)', 'VHDL'],
+        good_to_have_skills: ['RTOS', 'IoT Protocols (MQTT)'],
+        status: 'approved'
+    },
+
+    // --- More Diverse Roles ---
+    {
+        id: 16,
+        title: 'Cybersecurity Intern',
+        company_name: 'SecureNet',
+        location: 'Hyderabad, Telangana',
+        work_mode: 'On-site',
+        deadline: '2025-11-08T23:59:59Z',
+        start_date: '2025-11-24T09:00:00Z',
+        description: 'Assist our security team in vulnerability assessments, penetration testing, and monitoring security alerts.',
+        must_have_skills: ['Networking Concepts', 'Linux', 'Python Scripting'],
+        good_to_have_skills: ['Wireshark', 'Metasploit', 'Nmap'],
+        status: 'approved'
+    },
+    {
+        id: 17,
+        title: 'Product Management Intern',
+        company_name: 'FeatureFlow',
+        location: 'Remote',
+        work_mode: 'Remote',
+        deadline: '2025-12-15T23:59:59Z',
+        start_date: '2026-01-15T09:00:00Z',
+        description: 'Work with engineering and design teams to define product features, conduct user research, and manage the product roadmap.',
+        must_have_skills: ['Market Research', 'Agile Methodology', 'Communication'],
+        good_to_have_skills: ['Jira', 'Product Roadmapping Tools'],
+        status: 'approved'
+    },
+    {
+        id: 18,
+        title: 'Operations Management Intern',
+        company_name: 'SupplyChain Pro',
+        location: 'Chennai, Tamil Nadu',
+        work_mode: 'On-site',
+        deadline: '2025-11-01T23:59:59Z',
+        start_date: '2025-11-17T09:00:00Z',
+        description: 'Learn about supply chain logistics, inventory management, and process optimization in a fast-paced environment.',
+        must_have_skills: ['MS Excel', 'Problem-Solving', 'Process Analysis'],
+        good_to_have_skills: ['SAP', 'Supply Chain Principles'],
+        status: 'approved'
+    },
+    {
+        id: 19,
+        title: 'AI/ML Research Intern',
+        company_name: 'Cognitive AI Labs',
+        location: 'Bengaluru, Karnataka',
+        work_mode: 'Hybrid',
+        deadline: '2025-12-20T23:59:59Z',
+        start_date: '2026-01-20T09:00:00Z',
+        description: 'Contribute to cutting-edge AI research projects. Work on developing and training machine learning models for real-world applications.',
+        must_have_skills: ['Python', 'PyTorch/TensorFlow', 'Machine Learning Algorithms'],
+        good_to_have_skills: ['NLP', 'Computer Vision', 'Research Paper Writing'],
+        status: 'approved'
+    },
+    {
+        id: 20,
+        title: 'Legal Intern (Corporate Law)',
+        company_name: 'Lex Veritas Legal',
+        location: 'Delhi',
+        work_mode: 'On-site',
+        deadline: '2025-11-10T23:59:59Z',
+        start_date: '2025-12-01T09:00:00Z',
+        description: 'Assist our legal team with contract drafting, legal research, and ensuring corporate compliance. For law students.',
+        must_have_skills: ['Legal Research', 'Contract Drafting', 'Corporate Law Basics'],
+        good_to_have_skills: ['MS Word', 'Legal Databases (Manupatra)'],
+        status: 'approved'
+    },
+];
