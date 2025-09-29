@@ -140,11 +140,9 @@ function Login({ setUserType, setUserId }) {
         <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-between">
           
           <div className="absolute top-6 right-6 z-10">
-            <img
-                src={pmInternshipLogo}
-                alt="PM Internship Logo"
-                className="h-10 w-auto"
-              />
+            <span className="text-1xl font-bold text-gray-800 tracking-wide">
+              PM <span className="text-orange-500">INTERNSHIP</span>
+            </span>
           </div>
 
           <div className="flex-grow flex flex-col justify-center">

@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     FiMapPin, FiBriefcase, FiClock, FiX, FiChevronsLeft,
-    FiStar, FiCheck, FiArrowRight
+    FiStar, FiCheck, FiArrowRight, FiSearch
 } from 'react-icons/fi';
+// Make sure the path to your new data file is correct
 import { sampleInternships } from './components/SampleData'; 
 
 // --- Reusable UI Components ---
@@ -17,7 +18,7 @@ const SkillTag = ({ skill, isMustHave = false }) => (
 
 const InternshipCard = ({ internship, onSelect }) => (
     <motion.div
-        layoutId={`internship-card-${internship.id}`} // For potential shared layout animations
+        layoutId={`internship-card-${internship.id}`}
         onClick={() => onSelect(internship)}
         className="bg-white rounded-lg shadow-md p-5 border-l-4 border-orange-500 flex flex-col justify-between hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
     >
@@ -41,6 +42,11 @@ const ExploreInternships = () => {
     const [selectedInternship, setSelectedInternship] = useState(null);
     const navigate = useNavigate();
 
+    // --- NEW: State for search and filters ---
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedLocation, setSelectedLocation] = useState('');
+    const [selectedWorkMode, setSelectedWorkMode] = useState('');
+
     const handleSelectInternship = (internship) => {
         setSelectedInternship(internship);
     };
@@ -48,6 +54,29 @@ const ExploreInternships = () => {
     const handleDeselect = () => {
         setSelectedInternship(null);
     };
+
+    // --- NEW: Memoize filter options to prevent re-calculation ---
+    const filterOptions = useMemo(() => {
+        const locations = [...new Set(internships.map(i => i.location))].sort();
+        const workModes = [...new Set(internships.map(i => i.work_mode))].sort();
+        return { locations, workModes };
+    }, [internships]);
+
+    // --- NEW: Filtering logic ---
+    const filteredInternships = useMemo(() => {
+        return internships
+            .filter(internship => {
+                const term = searchTerm.toLowerCase();
+                return (
+                    internship.title.toLowerCase().includes(term) ||
+                    internship.company_name.toLowerCase().includes(term) ||
+                    internship.must_have_skills.some(skill => skill.toLowerCase().includes(term))
+                );
+            })
+            .filter(internship => selectedLocation ? internship.location === selectedLocation : true)
+            .filter(internship => selectedWorkMode ? internship.work_mode === selectedWorkMode : true);
+    }, [internships, searchTerm, selectedLocation, selectedWorkMode]);
+
 
     const listVariants = {
         hidden: { opacity: 0 },
@@ -70,7 +99,7 @@ const ExploreInternships = () => {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
                     <h1 className="text-2xl font-bold text-gray-900">Explore Internships</h1>
                     <button 
-                        onClick={() => navigate('/')} // Navigate to your landing page
+                        onClick={() => navigate('/')}
                         className="text-sm font-semibold text-gray-600 hover:text-orange-500 flex items-center gap-2"
                     >
                        <FiChevronsLeft /> Back to Home
@@ -78,24 +107,62 @@ const ExploreInternships = () => {
                 </div>
             </header>
             
+            {/* --- NEW: Search and Filter Bar --- */}
+            <div className="max-w-7xl mx-auto p-4 sm:px-6 lg:px-8 mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 bg-white p-4 rounded-lg shadow-sm">
+                    <div className="relative md:col-span-3">
+                        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Search by title, company, or skill..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        />
+                    </div>
+                    <select
+                        value={selectedLocation}
+                        onChange={(e) => setSelectedLocation(e.target.value)}
+                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
+                    >
+                        <option value="">All Locations</option>
+                        {filterOptions.locations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
+                    </select>
+                    <select
+                        value={selectedWorkMode}
+                        onChange={(e) => setSelectedWorkMode(e.target.value)}
+                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
+                    >
+                        <option value="">All Work Modes</option>
+                        {filterOptions.workModes.map(mode => <option key={mode} value={mode}>{mode}</option>)}
+                    </select>
+                </div>
+            </div>
+
             <main className="relative max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-                <motion.div 
-                    variants={listVariants}
-                    initial="hidden"
-                    animate="visible"
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-                >
-                    {internships.map(internship => (
-                        <motion.div key={internship.id} variants={itemVariants}>
-                             <InternshipCard internship={internship} onSelect={handleSelectInternship} />
-                        </motion.div>
-                    ))}
-                </motion.div>
+                {filteredInternships.length > 0 ? (
+                    <motion.div 
+                        variants={listVariants}
+                        initial="hidden"
+                        animate="visible"
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                    >
+                        {filteredInternships.map(internship => (
+                            <motion.div key={internship.id} variants={itemVariants}>
+                                 <InternshipCard internship={internship} onSelect={handleSelectInternship} />
+                            </motion.div>
+                        ))}
+                    </motion.div>
+                ) : (
+                    <div className="text-center py-16">
+                        <h3 className="text-xl font-semibold text-gray-700">No Internships Found</h3>
+                        <p className="text-gray-500 mt-2">Try adjusting your search or filter criteria.</p>
+                    </div>
+                )}
 
                 <AnimatePresence>
                     {selectedInternship && (
                         <>
-                            {/* Backdrop */}
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -103,7 +170,6 @@ const ExploreInternships = () => {
                                 onClick={handleDeselect}
                                 className="fixed inset-0 bg-black bg-opacity-50 z-30"
                             />
-                            {/* Details Panel */}
                             <motion.div
                                 variants={panelVariants}
                                 initial="closed"
@@ -148,7 +214,7 @@ const ExploreInternships = () => {
                                 
                                 <div className="p-6 border-t bg-gray-50">
                                     <button 
-                                        onClick={() => navigate('/student')} // Navigate to sign-up/login page
+                                        onClick={() => navigate('/student')} // Or your specific login/register page
                                         className="w-full bg-orange-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-orange-600 transition-colors flex items-center justify-center gap-2"
                                     >
                                         Apply Now <FiArrowRight />
